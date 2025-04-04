@@ -2,189 +2,224 @@ THESE ARE OLD INSTRUCTIONS THAT CAN BE IGNORED FOR NOW
 
 # AI Video RTSP Streamer
 
-## Project Overview
-This project provides a tool for streaming video content over RTSP (Real Time Streaming Protocol). It's designed to stream video files through a MediaMTX server, which can then be accessed by RTSP clients like VLC media player.
-
-## Current Issue
-We're experiencing an issue with the video stream terminating prematurely:
-
-1. **Initial Setup Works:**
-   - MediaMTX server starts successfully on port 8554
-   - FFmpeg stream connects to the server
-   - Video begins streaming
-
-2. **Stream Termination:**
-   - Stream runs for exactly one loop of the video (8.60 seconds)
-   - FFmpeg reports: `time=00:00:08.56 bitrate=N/A speed=1.06x`
-   - Server logs: `[RTSP] [session 1d2ee4f1] destroyed: torn down by 127.0.0.1:50966`
-   - Stream stops despite `-stream_loop -1` parameter
-
-3. **Attempted Solutions:**
-   - Updated MediaMTX configuration
-   - Modified FFmpeg streaming parameters
-   - Added TCP transport mode
-   - Implemented video looping
-
-## Technical Details
-- Server: MediaMTX v1.5.1
-- Protocol: RTSP over TCP
-- Video: 1080p, 25fps, 5000kb/s
-- Source Duration: 8.60 seconds
-- Stream URL: rtsp://192.168.86.65:8554/stream
-
-## Setup Instructions
-1. Start MediaMTX server:
-   ```bash
-   cd AI-Video-RTSP-STREAMER
-   ./mediamtx
-   ```
-
-2. Start video stream:
-   ```bash
-   source venv/bin/activate
-   video-streamer stream --video apple --fps 25
-   ```
-
-3. Access stream in VLC:
-   - Media > Open Network Stream
-   - URL: rtsp://192.168.86.65:8554/stream
-
-## Next Steps
-1. Investigate why the stream loop parameter isn't working
-2. Check for MediaMTX session timeout settings
-3. Consider implementing auto-reconnect in the Python code
-4. Monitor server and client connection states
-
-## Components
-1. **MediaMTX Server**: A media streaming server that supports multiple protocols including RTSP
-2. **Video Streamer**: A Python-based tool that uses FFmpeg to stream video content to the MediaMTX server
-3. **Configuration**: Uses `mediamtx.yml` for server configuration
-
-## Current Setup
-- Server IP: 192.168.86.65
-- RTSP Port: 8554
-- Stream URL: rtsp://192.168.86.65:8554/stream
-- Video Format: 1080p, 25fps, 5000kb/s bitrate
-
-## Current Issues
-We're experiencing several challenges:
-
-1. **MediaMTX Server Stability**:
-   - The server appears to be crashing or not starting properly
-   - Logs show configuration issues with the protocols section
-   - Current error: `ERR: json: cannot unmarshal object into Go struct field alias.protocols of type []string`
-
-2. **Stream Connection**:
-   - FFmpeg is unable to establish a connection to the RTSP server
-   - The stream starts but terminates unexpectedly
-   - VLC client cannot connect to the stream
-
-## Troubleshooting Steps Taken
-1. Modified MediaMTX configuration:
-   - Simplified protocols to TCP only
-   - Set explicit IP binding (0.0.0.0:8554)
-   - Removed authentication requirements
-
-2. Updated streaming parameters:
-   - Matched source video frame rate (25fps)
-   - Added TCP transport mode
-   - Implemented video looping
-
-## Usage
-1. Start the MediaMTX server:
-   ```bash
-   cd AI-Video-RTSP-STREAMER
-   ./mediamtx
-   ```
-
-2. In a separate terminal, start the video stream:
-   ```bash
-   source venv/bin/activate
-   video-streamer stream --video apple --fps 25
-   ```
-
-3. Connect with VLC:
-   - Open VLC
-   - Media > Open Network Stream
-   - Enter: rtsp://192.168.86.65:8554/stream
+A Python-based tool for streaming videos via RTSP, designed for AI video processing applications. This guide assumes you're new to Ubuntu Linux and will walk you through each step in detail.
 
 ## Features
 
-- Stream videos over RTSP protocol
 - Download and manage video files
-- Configure streaming parameters (resolution, framerate, bitrate)
-- Inspect video metadata
-- List available videos
+- Stream videos via RTSP with configurable parameters
+- Support for frame rate, resolution, and bitrate control
+- Video looping capability
+- Simple command-line interface
 
-## Requirements
+## Prerequisites
 
-- Python 3.8+
-- Go 1.21+ (required for MediaMTX server)
-- FFmpeg
-- curl
+Before you begin, you'll need:
+- Ubuntu Linux (tested on Ubuntu 22.04 LTS)
+- Python 3.7 or newer
+- FFmpeg (for video processing)
+- MediaMTX (RTSP server)
 
-## Installation
+## Installation Guide
 
-1. Clone the repository:
+### 1. Open a Terminal
+- Press `Ctrl + Alt + T` to open a terminal window
+- Or click the "Activities" button in the top-left corner, type "terminal", and click on the Terminal icon
+
+### 2. Install Required System Packages
+First, update your system's package list and install necessary tools:
 ```bash
-git clone https://github.com/JoshCork/AI-Video-RTSP-STREAMER.git
-cd AI-Video-RTSP-STREAMER
+# Update package list
+sudo apt-get update
+
+# Install Git (if not already installed)
+sudo apt-get install git
+
+# Install Python3 and pip (Python package manager)
+sudo apt-get install python3 python3-pip python3-venv
 ```
 
-2. Install system dependencies:
+### 3. Set Up the Project
 ```bash
-# Install Go (if not already installed)
-sudo apt install golang-go
+# Create a directory for your projects (if you don't have one)
+mkdir -p ~/Source
+cd ~/Source
 
-# Install FFmpeg (if not already installed)
-sudo apt install ffmpeg
-
-# Install curl (if not already installed)
-sudo apt install curl
+# Clone this repository
+git clone https://github.com/yourusername/ai-video-rtsp-streamer.git
+cd ai-video-rtsp-streamer
 ```
 
-3. Create and activate Python virtual environment:
+### 4. Create and Activate a Python Virtual Environment
+A virtual environment keeps project dependencies isolated:
 ```bash
+# Create a virtual environment
 python3 -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate
+```
+Note: You'll need to activate the virtual environment every time you open a new terminal window:
+```bash
+cd ~/Source/ai-video-rtsp-streamer
 source venv/bin/activate
 ```
 
-4. Install Python dependencies:
+### 5. Install Python Dependencies
 ```bash
+# Install required Python packages
 pip install -r requirements.txt
 ```
 
-## Usage
-
-### Stream a video
+### 6. Install FFmpeg
+FFmpeg is required for video processing:
 ```bash
-video-streamer stream --video apple --resolution 1080p --fps 25
+sudo apt-get install ffmpeg
 ```
 
-### Download a new video
+### 7. Install MediaMTX
+MediaMTX is the RTSP server that handles video streaming:
 ```bash
-video-streamer download --url <URL> --name banana
-```
-
-### List available videos
-```bash
-video-streamer list
-```
-
-### Show video metadata
-```bash
-video-streamer info --video apple
+sudo apt-get install mediamtx
 ```
 
 ## Configuration
 
-Streaming parameters can be configured via command-line flags or defaults can be set in the config file.
+The default configuration is stored in `config.yaml`. You can modify these settings to match your needs:
 
-Default parameters:
-- Resolution: 1920x1080
-- Framerate: 25 fps
-- Bitrate: 5000 kb/s
-- RTSP URL: rtsp://localhost:8554/stream
+```yaml
+stream:
+  fps: 25          # Frames per second
+  resolution: "1920x1080"  # Video resolution
+  bitrate: "5M"    # Video quality (5 megabits per second)
+  loop: true       # Whether to loop the video
+rtsp:
+  host: "localhost"  # Server address (use your machine's IP for remote access)
+  port: 8554        # RTSP port
+  path: "stream"    # Stream path
+```
+
+## Usage Guide
+
+### Starting the MediaMTX Server
+Before streaming, you need to start the MediaMTX server:
+```bash
+# Start MediaMTX in the background
+mediamtx &
+```
+
+### Managing Videos
+
+1. List available videos:
+```bash
+# Make sure you're in the project directory and virtual environment is activated
+cd ~/Source/ai-video-rtsp-streamer
+source venv/bin/activate
+python -m src.cli list
+```
+
+2. Download a video:
+```bash
+python -m src.cli download --url "https://example.com/video.mp4" --name "my_video"
+```
+
+### Streaming Videos
+
+The streaming command supports several options to customize the stream:
+
+```bash
+python -m src.cli stream --video "my_video" [options]
+```
+
+Available options:
+- `--video`: (Required) Name of the video to stream (without .mp4 extension)
+- `--fps`: (Optional) Set custom frame rate (e.g., `--fps 15` for 15 FPS)
+- `--resolution`: (Optional) Set custom resolution (e.g., `--resolution "1280x720"`)
+- `--bitrate`: (Optional) Set custom bitrate (e.g., `--bitrate "2M"` for 2 Mbps)
+- `--loop`: (Optional) Enable video looping (no value needed, just add the flag)
+
+Examples:
+```bash
+# Basic streaming with default settings
+python -m src.cli stream --video "pexels_apple_single"
+
+# Stream at 15 FPS with looping
+python -m src.cli stream --video "pexels_apple_single" --fps 15 --loop
+
+# Stream at 720p resolution with 2 Mbps bitrate
+python -m src.cli stream --video "pexels_apple_single" --resolution "1280x720" --bitrate "2M"
+
+# Combine multiple options
+python -m src.cli stream --video "pexels_apple_single" --fps 15 --resolution "1280x720" --bitrate "2M" --loop
+```
+
+### Stopping the Stream
+
+To properly stop the stream, you need to do two things:
+
+1. Stop the Python stream (in a new terminal window):
+```bash
+# Make sure you're in the project directory and virtual environment is activated
+cd ~/Source/ai-video-rtsp-streamer
+source venv/bin/activate
+python -m src.cli stop
+```
+
+2. Stop the MediaMTX server:
+```bash
+pkill mediamtx
+```
+
+If you want to restart everything fresh:
+```bash
+# 1. Stop everything
+source venv/bin/activate
+python -m src.cli stop
+pkill mediamtx
+
+# 2. Start MediaMTX
+mediamtx &
+
+# 3. Start your stream
+python -m src.cli stream --video "pexels_apple_single" --loop
+```
+
+Note: Simply pressing Ctrl+C in the terminal where the stream is running will not completely stop the stream. You need to follow the steps above to properly stop both the Python stream and the MediaMTX server.
+
+### Connecting to the Stream
+You can connect to the stream using VLC Media Player:
+1. Open VLC
+2. Go to Media → Open Network Stream
+3. Enter the RTSP URL: `rtsp://your-ip-address:8554/stream`
+   - Replace `your-ip-address` with your computer's IP address
+   - You can find your IP address by running `ip addr show` in the terminal
+
+## Troubleshooting
+
+### Common Issues
+
+1. "ModuleNotFoundError: No module named 'cv2'"
+   - Make sure you've activated the virtual environment: `source venv/bin/activate`
+   - Verify the package is installed: `pip list | grep opencv-python`
+
+2. "Command not found: mediamtx"
+   - Make sure MediaMTX is installed: `sudo apt-get install mediamtx`
+
+3. Can't connect to the stream
+   - Check if MediaMTX is running: `ps aux | grep mediamtx`
+   - Verify your firewall settings allow traffic on port 8554
+   - Make sure you're using the correct IP address
+
+## Project Structure
+
+- `src/`: Contains all Python source code
+  - `cli.py`: Command-line interface
+  - `streamer.py`: Video streaming functionality
+  - `video_manager.py`: Video management utilities
+  - `utils.py`: Helper functions
+- `videos/`: Directory where downloaded videos are stored
+- `config.yaml`: Configuration file
+- `requirements.txt`: List of Python package dependencies
 
 ## License
 

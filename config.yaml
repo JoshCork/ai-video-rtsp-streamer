@@ -1,0 +1,9 @@
+stream:
+  fps: 25
+  resolution: "1920x1080"
+  bitrate: "5M"
+  loop: true
+rtsp:
+  host: "localhost"
+  port: 8554
+  path: "stream" 
